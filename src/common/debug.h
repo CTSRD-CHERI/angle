@@ -104,8 +104,13 @@ angle::SimpleMutex &GetDebugMutex();
 // structs to enforce packing. This is helpful for diagnosing unexpected struct sizes when making
 // fast cache variables.
 #if defined(__clang__)
+#if defined(__CHERI_PURE_CAPABILITY__)
+#    define ANGLE_ENABLE_STRUCT_PADDING_WARNINGS \
+        _Pragma("clang diagnostic push") _Pragma("clang diagnostic warning \"-Wpadded\"")
+#else
 #    define ANGLE_ENABLE_STRUCT_PADDING_WARNINGS \
         _Pragma("clang diagnostic push") _Pragma("clang diagnostic error \"-Wpadded\"")
+#endif
 #    define ANGLE_DISABLE_STRUCT_PADDING_WARNINGS _Pragma("clang diagnostic pop")
 #elif defined(__GNUC__)
 #    define ANGLE_ENABLE_STRUCT_PADDING_WARNINGS \
