@@ -182,6 +182,9 @@ struct ProgramOutput
         uint32_t hasApiAssignedLocation : 1;
         uint32_t pad : 25;
     } pod;
+#if defined(__CHERI_PURE_CAPABILITY__)
+    uint64_t pad;
+#endif
 };
 ANGLE_DISABLE_STRUCT_PADDING_WARNINGS
 
