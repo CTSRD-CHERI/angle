@@ -21,9 +21,18 @@ namespace angle
 // Test that dynamic allocation works as expected.
 TEST(AlignedMemoryTest, DynamicAllocation)
 {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    void *p = AlignedAlloc(8,
+      std::max(static_cast<size_t>(8), alignof(max_align_t)));
+#else
     void *p = AlignedAlloc(8, 8);
+#endif
     EXPECT_TRUE(p);
+#if defined(__CHERI_PURE_CAPABILITY__)
+    EXPECT_ALIGNED(p, std::max(static_cast<size_t>(8), alignof(max_align_t)));
+#else
     EXPECT_ALIGNED(p, 8);
+#endif
     AlignedFree(p);
 
     p = AlignedAlloc(8, 16);
