@@ -1542,9 +1542,9 @@ void main()
     template <typename destType, typename sourcetype>
     destType reinterpretHelper(const sourcetype &source)
     {
-        static_assert(sizeof(destType) == sizeof(size_t),
-                      "destType should be the same size as a size_t");
-        size_t sourceSizeT = static_cast<size_t>(source.get());
+        static_assert(sizeof(destType) == sizeof(uintptr_t),
+                      "destType should be the same size as a uintptr_t");
+        uintptr_t sourceSizeT = static_cast<uintptr_t>(source.get());
         return reinterpret_cast<destType>(sourceSizeT);
     }
 
