@@ -689,11 +689,34 @@ INTERNAL_DECLARE_SET_TRACE_VALUE_INT(short, TRACE_VALUE_TYPE_INT)
 INTERNAL_DECLARE_SET_TRACE_VALUE_INT(signed char, TRACE_VALUE_TYPE_INT)
 INTERNAL_DECLARE_SET_TRACE_VALUE(bool, m_bool, TRACE_VALUE_TYPE_BOOL)
 INTERNAL_DECLARE_SET_TRACE_VALUE(double, m_double, TRACE_VALUE_TYPE_DOUBLE)
+#if defined(__CHERI_PURE_CAPABILITY__)
+// Preserve the capability when packing pointer-valued arguments.
+static inline void setTraceValue(const void *arg, unsigned char *type, uintptr_t *value)
+{
+    *type  = TRACE_VALUE_TYPE_POINTER;
+    *value = reinterpret_cast<uintptr_t>(arg);
+}
+
+static inline void setTraceValue(const char *arg, unsigned char *type, uintptr_t *value)
+{
+    *type  = TRACE_VALUE_TYPE_STRING;
+    *value = reinterpret_cast<uintptr_t>(arg);
+}
+
+static inline void setTraceValue(const TraceStringWithCopy &arg,
+                                 unsigned char *type,
+                                 uintptr_t *value)
+{
+    *type  = TRACE_VALUE_TYPE_COPY_STRING;
+    *value = reinterpret_cast<uintptr_t>(static_cast<const char *>(arg));
+}
+#else
 INTERNAL_DECLARE_SET_TRACE_VALUE(const void *, m_pointer, TRACE_VALUE_TYPE_POINTER)
 INTERNAL_DECLARE_SET_TRACE_VALUE(const char *, m_string, TRACE_VALUE_TYPE_STRING)
 INTERNAL_DECLARE_SET_TRACE_VALUE(const TraceStringWithCopy &,
                                  m_string,
                                  TRACE_VALUE_TYPE_COPY_STRING)
+#endif
 
 #undef INTERNAL_DECLARE_SET_TRACE_VALUE
 #undef INTERNAL_DECLARE_SET_TRACE_VALUE_INT
@@ -706,10 +729,14 @@ static inline void setTraceValue(const std::string &arg,
                                  unsigned long long *value)
 #endif  // !__CHERI_PURE_CAPABILITY__
 {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    setTraceValue(TraceStringWithCopy(arg.data()), type, value);
+#else
     TraceValueUnion typeValue;
     typeValue.m_string = arg.data();
     *type              = TRACE_VALUE_TYPE_COPY_STRING;
     *value             = typeValue.m_uint;
+#endif
 }
 
 static inline void unpackArguments(const char **names,
