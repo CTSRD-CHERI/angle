@@ -23,7 +23,12 @@
 #include <pthread_np.h>
 #endif
 
+#if ANGLE_PLATFORM_FREEBSD
+#    include <sys/sysctl.h>
+#endif
+
 #include <array>
+#include <vector>
 
 namespace angle
 {
@@ -42,6 +47,30 @@ std::string GetExecutablePath()
 
     path[result] = '\0';
     return path;
+}
+#elif ANGLE_PLATFORM_FREEBSD
+std::string GetExecutablePath()
+{
+    int mib[]   = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
+    size_t size = 0;
+    if (sysctl(mib, 4, nullptr, &size, nullptr, 0) != 0 || size == 0)
+    {
+        return "";
+    }
+
+    std::vector<char> path(size);
+    if (sysctl(mib, 4, path.data(), &size, nullptr, 0) != 0 || size == 0 ||
+        size > path.size())
+    {
+        return "";
+    }
+
+    // Do not return a partial path if the kernel did not include a terminator.
+    if (path[size - 1] != '\0')
+    {
+        return "";
+    }
+    return std::string(path.data(), size - 1);
 }
 #endif
 
